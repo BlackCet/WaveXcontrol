@@ -312,3 +312,11 @@ class Controller:
     def scrollVertical():
         """scrolls on screen vertically."""
         pyautogui.scroll(120 if Controller.pinchlv>0.0 else -120)
+
+    def scrollHorizontal():
+        """scrolls on screen horizontally."""
+        pyautogui.keyDown('shift')
+        pyautogui.keyDown('ctrl')
+        pyautogui.scroll(-120 if Controller.pinchlv>0.0 else 120)
+        pyautogui.keyUp('ctrl')
+        pyautogui.keyUp('shift')
