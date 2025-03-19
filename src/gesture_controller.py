@@ -214,3 +214,101 @@ class HandRecog:
         if self.frame_count > 4 :
             self.ori_gesture = current_gesture
         return self.ori_gesture
+
+
+        # Executes commands according to detected gestures
+class Controller:
+    """
+    Executes commands according to detected gestures.
+
+    Attributes
+    ----------
+    tx_old : int
+        previous mouse location x coordinate
+    ty_old : int
+        previous mouse location y coordinate
+    flag : bool
+        true if V gesture is detected
+    grabflag : bool
+        true if FIST gesture is detected
+    pinchmajorflag : bool
+        true if PINCH gesture is detected through MAJOR hand,
+        on x-axis 'Controller.changesystembrightness', 
+        on y-axis 'Controller.changesystemvolume'.
+    pinchminorflag : bool
+        true if PINCH gesture is detected through MINOR hand,
+        on x-axis 'Controller.scrollHorizontal', 
+        on y-axis 'Controller.scrollVertical'.
+    pinchstartxcoord : int
+        x coordinate of hand landmark when pinch gesture is started.
+    pinchstartycoord : int
+        y coordinate of hand landmark when pinch gesture is started.
+    pinchdirectionflag : bool
+        true if pinch gesture movment is along x-axis,
+        otherwise false
+    prevpinchlv : int
+        stores quantized magnitued of prev pinch gesture displacment, from 
+        starting position
+    pinchlv : int
+        stores quantized magnitued of pinch gesture displacment, from 
+        starting position
+    framecount : int
+        stores no. of frames since 'pinchlv' is updated.
+    prev_hand : tuple
+        stores (x, y) coordinates of hand in previous frame.
+    pinch_threshold : float
+        step size for quantization of 'pinchlv'.
+    """
+
+    tx_old = 0
+    ty_old = 0
+    trial = True
+    flag = False
+    grabflag = False
+    pinchmajorflag = False
+    pinchminorflag = False
+    pinchstartxcoord = None
+    pinchstartycoord = None
+    pinchdirectionflag = None
+    prevpinchlv = 0
+    pinchlv = 0
+    framecount = 0
+    prev_hand = None
+    pinch_threshold = 0.3
+    
+    def getpinchylv(hand_result):
+        """returns distance beween starting pinch y coord and current hand position y coord."""
+        dist = round((Controller.pinchstartycoord - hand_result.landmark[8].y)*10,1)
+        return dist
+
+    def getpinchxlv(hand_result):
+        """returns distance beween starting pinch x coord and current hand position x coord."""
+        dist = round((hand_result.landmark[8].x - Controller.pinchstartxcoord)*10,1)
+        return dist
+    
+    def changesystembrightness():
+        """sets system brightness based on 'Controller.pinchlv'."""
+        currentBrightnessLv = sbcontrol.get_brightness(display=0)/100.0
+        currentBrightnessLv += Controller.pinchlv/50.0
+        if currentBrightnessLv > 1.0:
+            currentBrightnessLv = 1.0
+        elif currentBrightnessLv < 0.0:
+            currentBrightnessLv = 0.0       
+        sbcontrol.fade_brightness(int(100*currentBrightnessLv) , start = sbcontrol.get_brightness(display=0))
+    
+    def changesystemvolume():
+        """sets system volume based on 'Controller.pinchlv'."""
+        devices = AudioUtilities.GetSpeakers()
+        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        volume = cast(interface, POINTER(IAudioEndpointVolume))
+        currentVolumeLv = volume.GetMasterVolumeLevelScalar()
+        currentVolumeLv += Controller.pinchlv/50.0
+        if currentVolumeLv > 1.0:
+            currentVolumeLv = 1.0
+        elif currentVolumeLv < 0.0:
+            currentVolumeLv = 0.0
+        volume.SetMasterVolumeLevelScalar(currentVolumeLv, None)
+    
+    def scrollVertical():
+        """scrolls on screen vertically."""
+        pyautogui.scroll(120 if Controller.pinchlv>0.0 else -120)
