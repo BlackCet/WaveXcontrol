@@ -220,7 +220,6 @@ class HandRecog:
 class Controller:
     """
     Executes commands according to detected gestures.
-
     Attributes
     ----------
     tx_old : int
@@ -594,6 +593,9 @@ class GestureController:
         cv2.destroyAllWindows()
 
 
-    # uncomment to run directly
-    # gc1 = GestureController()
-    # gc1.start()
+    gc1 = GestureController()
+    gc1.start()
+
+    #these previous lines were commented
+    # to run the program previous two lines must be uncommented 
+    # and run python gesture_controller.py on terminal
