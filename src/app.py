@@ -1,9 +1,5 @@
 import streamlit as st
-try:
-    import cv2
-    st.success("✅ OpenCV loaded successfully!")
-except ModuleNotFoundError:
-    st.error("❌ OpenCV module not found.")
+import cv2
 import mediapipe as mp
 from gcpy import GestureController, HandRecog, HLabel, Gest, Controller  # Assuming your class is in gcpy.py
 
